@@ -21,8 +21,7 @@ public class Client {
                 String tmp = stdIn.nextLine();
                 byte[] data = tmp.getBytes();
                 dpsend = new DatagramPacket(data, data.length, add, destPort);
-                System.out.println("Client sent " + tmp + " to " + add.getHostAddress() +
-                        " from port " + socket.getLocalPort());
+                System.out.println("Client sent '" + tmp + "' to server from port " + socket.getLocalPort());
                 socket.send(dpsend);
                 if(tmp.equals("bye")) {
                     System.out.println("Client socket closed");
