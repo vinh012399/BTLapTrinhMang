@@ -11,6 +11,7 @@ public class Client {
         DatagramSocket socket;
         DatagramPacket dpsend, dpreceive;
         InetAddress add; Scanner stdIn;
+        System.out.println("Don't input 'BYE' unless to quit !");
         try {
             add = InetAddress.getByName(hostname);	//UnknownHostException
             socket = new DatagramSocket();			//SocketException
