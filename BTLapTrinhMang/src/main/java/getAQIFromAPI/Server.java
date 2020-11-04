@@ -41,9 +41,9 @@ public class Server {
         String userAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.130 Safari/537.36";
         try {
             Document doc = Jsoup.connect(url + "countries?key=" + key)
-                    .ignoreContentType(true)
-                    .ignoreHttpErrors(true)
-                    .get( );
+                                        .ignoreContentType(true)
+                                        .ignoreHttpErrors(true)
+                                        .get( );
             String allcountries = doc.text( );
 
             // parsing file "JSONExample.json"
@@ -80,9 +80,9 @@ public class Server {
 
         try {
             Document doc = Jsoup.connect(url + "states?country="+country+"&key=" + key)
-                    .ignoreContentType(true)
-                    .ignoreHttpErrors(true)
-                    .get( );
+                                        .ignoreContentType(true)
+                                        .ignoreHttpErrors(true)
+                                        .get( );
 
             String allstates = doc.text().toString();
             Object obj = new JSONParser().parse(allstates);
@@ -101,7 +101,7 @@ public class Server {
             else{
                 JSONObject data = (JSONObject) jo.get("data");
                 String message = (String) data.get("message");
-                states.add("\n"+status+"\n"+message+"\nBạn đã nhập sai tên Country\nNhập 'Hello' để xem tất cả các country");
+                states.add("\n(Status: "+status+")\n(Message: "+message+")\nIncorrect Country\nInput 'Hello' to get all countries");
             }
 
         } catch (HttpStatusException e){
@@ -123,9 +123,9 @@ public class Server {
 
         try {
             Document doc = Jsoup.connect(url + "cities?state="+state+"&country=" + country + "&key=" + key)
-                    .ignoreContentType(true)
-                    .ignoreHttpErrors(true)
-                    .get();
+                                        .ignoreContentType(true)
+                                        .ignoreHttpErrors(true)
+                                        .get();
 
             String allcities = doc.text( );
             Object obj = new JSONParser( ).parse(allcities);
@@ -145,7 +145,7 @@ public class Server {
             else{
                 JSONObject data = (JSONObject) jo.get("data");
                 String message = (String) data.get("message");
-                cities.add(status+"\n"+message+"\nBạn đã nhập sai hoặc bạn phải nhập đúng cú pháp Country;State");
+                cities.add("(Status: "+status+")\n(Message: "+message+")\nIncorect syntax Country;State");
             }
 
         }catch (HttpStatusException e){
@@ -165,7 +165,10 @@ public class Server {
         String userAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.130 Safari/537.36";
 
         try{
-            Document doc = Jsoup.connect(url+"city?city=" +city+ "&state=" +state+"&country="+country+"&key="+key).ignoreContentType(true).ignoreHttpErrors(true).get();
+            Document doc = Jsoup.connect(url+"city?city=" +city+ "&state=" +state+"&country="+country+"&key="+key)
+                                        .ignoreContentType(true)
+                                        .ignoreHttpErrors(true)
+                                        .get();
             Object obj = new JSONParser().parse(doc.text());
 
             JSONObject jo = (JSONObject) obj;
@@ -175,12 +178,14 @@ public class Server {
                 JSONObject data = (JSONObject) jo.get("data");
                 JSONObject current = (JSONObject) data.get("current");
                 JSONObject pollution = (JSONObject) current.get("pollution");
-                result += "Chỉ số không khí AQI: " + String.valueOf(pollution.get("aqius"));
+                result += "Chỉ số không khí:\n" +
+                            "+ AQIUS: " + String.valueOf(pollution.get("aqius")) +
+                            "\n+ AQICN: "+ String.valueOf(pollution.get("aqicn"));
             }
             else{
                 JSONObject data = (JSONObject) jo.get("data") ;
                 String message = (String) data.get("message");
-                result+= status+"\n"+message+"\n Bạn phải nhập đúng cú pháp Country;State;City";
+                result+= "\n(Status: "+status+")\n(Message: "+message+")\nIncorect syntax Country;State;City";
             }
 
         } catch (HttpStatusException e){
@@ -216,6 +221,7 @@ public class Server {
                 out = "";
                 socket.receive(dpreceive);
                 in = new String(dpreceive.getData(), 0, dpreceive.getLength());
+                System.out.println("Receive '"+in+"' from client ");
                 int c;
                 String aqi;
                 if (in.toLowerCase().equals("bye")){
@@ -230,7 +236,7 @@ public class Server {
                 }else
                     c = check(in);
                 switch (c){
-                    case 0:
+                    default:
                         if(in.toLowerCase().equals("hello")){
                             content = getAllCountries();
                             for (String t : content) {
@@ -246,12 +252,12 @@ public class Server {
                             break;
                         }
                         else {
-                            content = getStates(in);
+                            content = getStates(in.toLowerCase());
                             for(String t : content){
                                 out += t + ", ";
                             }
                             out=out.trim();
-                            out=out.substring(0,out.length()-1);
+                            out=out.substring(0,out.length() -1 );
                             dpsend = new DatagramPacket(out.getBytes()
                                     ,out.getBytes().length
                                     ,dpreceive.getAddress()
@@ -262,8 +268,8 @@ public class Server {
 
                     case 2:
                         String[] temptarr = splitString(in);
-                        country = temptarr[0];
-                        state = temptarr[1];
+                        country = temptarr[0].toLowerCase();
+                        state = temptarr[1].toLowerCase();
                         content = getCities(country,state);
                         for(String t : content){
                             out += t + "\n";
@@ -277,9 +283,9 @@ public class Server {
 
                     case 3:
                         String[] temparr = splitString(in);
-                        country = temparr[0];
-                        state = temparr[1];
-                        city = temparr[2];
+                        country = temparr[0].toLowerCase();
+                        state = temparr[1].toLowerCase();
+                        city = temparr[2].toLowerCase();
                         aqi = AQI(country,state,city);
                         dpsend = new DatagramPacket(aqi.getBytes()
                                 ,aqi.getBytes().length
